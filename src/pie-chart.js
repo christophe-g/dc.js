@@ -37,6 +37,9 @@ dc.pieChart = function(parent, chartGroup) {
 
     function drawChart() {
         if (_chart.dataAreSet()) {
+        	
+        	 _g.attr("transform", "translate(" + _chart.cx() + "," + _chart.cy() + ")");
+            
             var pie = calculateDataPie();
 
             var arc = _chart.buildArcs();
