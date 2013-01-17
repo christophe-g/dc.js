@@ -257,7 +257,7 @@ dc.baseChart = function(_chart) {
             _renderlets[i](chart);
         }
     };
-    chart.resize = function() {
+    _chart.resize = function() {
         if(_svg) {
             _svg.attr("width", _chart.width())
             _svg.attr("height", _chart.height());
