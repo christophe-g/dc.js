@@ -392,6 +392,21 @@ dc.baseChart = function (_chart) {
         // do nothing in base, should be overridden by sub-function
         return _chart;
     };
+    _chart.apply = function(p, v) {
+        // apply a config when it exists
+        if(p && (typeof _chart[p] === 'function')) {
+            _chart[p](v)
+        }
+        return _chart
+    };
 
+    _chart.applyIf = function(p, v) {
+        // apply a config when it exists
+        if(p && (typeof _chart[p] === 'function') && v) {
+            _chart[p](v)
+        }
+        return _chart
+    };
+    
     return _chart;
 };
