@@ -3,7 +3,7 @@
     <property name="node.path" value="node_modules"/>
     <property name="js.compiler" value="${node.path}/.bin/uglifyjs"/>
     <property name="js.tester" value="${node.path}/.bin/vows"/>
-
+    <property name="es.path" value="/mnt/DAV"/>
     <target name="init">
         <echo>Building...</echo>
     </target>
@@ -25,6 +25,9 @@
     <target name="make" depends="clean, init">
         <echo>Compiling dc.js</echo>
         <concat destfile="dc.js">
+            <header> 
+                (function (window, document) {
+            </header>
             <file file="src/core.js"/>
             <file file="src/errors.js"/>
             <file file="src/utils.js"/>
@@ -46,6 +49,9 @@
             <file file="src/geo-choropleth-chart.js"/>
             <file file="src/bubble-overlay.js"/>
             <file file="src/row-chart.js"/>
+            <header> 
+                (function (window, document) {
+            </header>
         </concat>
         <echo>Compiling dc.min.js</echo>
         <exec executable="bash">
@@ -58,6 +64,15 @@
             <arg value="-c"/>
             <arg value="node ${basedir}/src/package.js > ${basedir}/package.json"/>
         </exec>
+        <exec executable="bash">
+            <arg value="-c"/>
+            <arg value="sudo cp -fr ${basedir}/dc.js ${es.path}/es.master/lib/dc/dc.js"/>
+        </exec>
+        <echo>Copy min to eSmile lib</echo>
+        <exec executable="bash">
+            <arg value="-c"/>
+            <arg value="sudo cp -fr ${basedir}/dc.min.js ${es.path}/es.master/lib/dc/dc.min.js"/>
+        </exec>  
     </target>
 
 </project>
