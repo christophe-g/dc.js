@@ -110,7 +110,7 @@ dc.baseChart = function (_chart) {
         return _root ? _root.selectAll(s) : null;
     };
 
-    _chart.anchor = function (a, chartGroup) {
+    _chart.anchor = function (a, chartGroup, cfg) {
         if (!arguments.length) return _anchor;
         if (dc.instanceOfChart(a)) {
             _anchor = a.anchor();
@@ -122,7 +122,15 @@ dc.baseChart = function (_chart) {
             dc.registerChart(_chart, chartGroup);
         }
         _chartGroup = chartGroup;
+        if(cfg) {_chart.applyConfig(cfg)}
         return _chart;
+    };
+    
+    _chart.applyConfig = function(cfg){
+        for (var p in cfg) {
+        if (typeof chart[p] === 'function' && !!cfg[p] && cfg.hasOwnProperty(p) ) {
+            chart[p](cfg[p])
+        }
     };
 
     _chart.root = function (r) {

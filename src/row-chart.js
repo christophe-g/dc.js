@@ -1,4 +1,4 @@
-dc.rowChart = function (parent, chartGroup) {
+dc.rowChart = function (parent, chartGroup, cfg) {
 
     var _g;
 
@@ -211,5 +211,5 @@ dc.rowChart = function (parent, chartGroup) {
         return _chart.hasFilter(_chart.keyAccessor()(d));
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };

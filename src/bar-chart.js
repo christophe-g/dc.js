@@ -1,4 +1,4 @@
-dc.barChart = function (parent, chartGroup) {
+dc.barChart = function (parent, chartGroup, cfg) {
     var MIN_BAR_WIDTH = 1;
     var DEFAULT_GAP_BETWEEN_BARS = 2;
 
@@ -198,5 +198,5 @@ dc.barChart = function (parent, chartGroup) {
         return this._prepareOrdinalXAxis(_chart.xUnitCount() + 1);
     });
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };

@@ -1,4 +1,4 @@
-dc.geoChoroplethChart = function (parent, chartGroup) {
+dc.geoChoroplethChart = function (parent, chartGroup, cfg) {
     var _chart = dc.colorChart(dc.baseChart({}));
 
     _chart.colorAccessor(function (d, i) {
@@ -177,5 +177,5 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
         return _chart;
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
