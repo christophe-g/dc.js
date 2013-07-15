@@ -194,7 +194,7 @@ dc.stackableChart = function (_chart) {
             var d = data[dataIndex];
             var value = getValueFromData(groupIndex, d);
             var pseudoZero = 1e-13;
-            if (groupIndex == 0 || _useYBaseline)) {
+            if (groupIndex == 0 || _useYBaseline) {
                 if (value > pseudoZero)
                     _groupStack.setDataPoint(groupIndex, dataIndex, _chart.dataPointBaseline() - _chart.dataPointHeight(d, groupIndex));
                 else
