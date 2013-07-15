@@ -1,6 +1,6 @@
 <project name="dc.js" default="make">
     <property environment="env"/>
-    <property name="node.path" value="node_modules"/>
+    <property name="node.path" value="../node_modules"/>
     <property name="js.compiler" value="${node.path}/.bin/uglifyjs"/>
     <property name="js.tester" value="${node.path}/.bin/vows"/>
     <property name="es.path" value="/mnt/DAV"/>

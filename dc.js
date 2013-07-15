@@ -1,4 +1,6 @@
-/*
+ 
+                (function (window, document) {
+            /*
  *  Copyright 2012 the original author or authors.
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  You may obtain a copy of the License at
@@ -12,7 +14,7 @@
  *  limitations under the License.
  */
 dc = {
-    version: "1.4.0",
+    version: "1.5.0",
     constants : {
         CHART_CLASS: "dc-chart",
         DEBUG_GROUP_CLASS: "debug",
@@ -180,28 +182,28 @@ dc.errors.InvalidStateException = function() {
 
 dc.printers = {};
 
-dc.printers.filters = function (filters) {
+dc.printers.filters = function (filters,lookupHandler) {
     var s = "";
 
     for (var i = 0; i < filters.length; ++i) {
         if (i > 0) s += ", ";
-        s += dc.printers.filter(filters[i]);
+        s += dc.printers.filter(filters[i],lookupHandler);
     }
 
     return s;
 };
 
-dc.printers.filter = function (filter) {
+dc.printers.filter = function (filter, lookupHandler) {
     var s = "";
 
     if (filter) {
         if (filter instanceof Array) {
             if (filter.length >= 2)
-                s = "[" + dc.utils.printSingleValue(filter[0]) + " -> " + dc.utils.printSingleValue(filter[1]) + "]";
+                s = "[" + dc.utils.printSingleValue(lookupHandler(filter[0]) + " -> " + dc.utils.printSingleValue(lookupHandler(filter[1]) + "]";
             else if (filter.length >= 1)
-                s = dc.utils.printSingleValue(filter[0]);
+                s = dc.utils.printSingleValue(lookupHandler(filter[0]);
         } else {
-            s = dc.utils.printSingleValue(filter)
+            s = dc.utils.printSingleValue(lookupHandler(filter))
         }
     }
 
@@ -209,6 +211,10 @@ dc.printers.filter = function (filter) {
 };
 
 dc.utils = {};
+
+dc.utils.identity = function(d) {
+    return d
+};
 
 dc.utils.printSingleValue = function (filter) {
     var s = "" + filter;
@@ -361,7 +367,7 @@ dc.events.trigger = function(closure, delay) {
             closure();
     }, delay);
 };
-dc.cumulative = {};
+    dc.cumulative = {};
 
 dc.cumulative.Base = function() {
     this._keyIndex = [];
@@ -523,6 +529,8 @@ dc.baseChart = function (_chart) {
 
     var _chartGroup = dc.constants.DEFAULT_CHART_GROUP;
 
+    var _lookupHandler = dc.utils.identity;
+
     var NULL_LISTENER = function (chart) {
     };
     var _listeners = {
@@ -598,7 +606,7 @@ dc.baseChart = function (_chart) {
         return _root ? _root.selectAll(s) : null;
     };
 
-    _chart.anchor = function (a, chartGroup) {
+    _chart.anchor = function (a, chartGroup, cfg) {
         if (!arguments.length) return _anchor;
         if (dc.instanceOfChart(a)) {
             _anchor = a.anchor();
@@ -610,7 +618,15 @@ dc.baseChart = function (_chart) {
             dc.registerChart(_chart, chartGroup);
         }
         _chartGroup = chartGroup;
+        if(cfg) {_chart.applyConfig(cfg)}
         return _chart;
+    };
+    
+    _chart.applyConfig = function(cfg){
+        for (var p in cfg) {
+        if (typeof chart[p] === 'function' && !!cfg[p] && cfg.hasOwnProperty(p) ) {
+            chart[p](cfg[p])
+        }
     };
 
     _chart.root = function (r) {
@@ -646,7 +662,7 @@ dc.baseChart = function (_chart) {
     _chart.turnOnControls = function () {
         if (_root) {
             _chart.selectAll(".reset").style("display", null);
-            _chart.selectAll(".filter").text(_filterPrinter(_chart.filters())).style("display", null);
+            _chart.selectAll(".filter").text(_filterPrinter(_chart.filters(),_lookupHandler)).style("display", null);
         }
         return _chart;
     };
@@ -796,7 +812,12 @@ dc.baseChart = function (_chart) {
         _filterHandler = _;
         return _chart;
     };
-
+    _chart.lookupHandler = function (_) {
+        if (!arguments.length) return _lookupHandler;
+        _lookupHandler = _;
+        return _chart;
+    };
+    
     // abstract function stub
     _chart.doRender = function () {
         // do nothing in base, should be overridden by sub-function
@@ -871,6 +892,21 @@ dc.baseChart = function (_chart) {
     _chart.expireCache = function () {
         // do nothing in base, should be overridden by sub-function
         return _chart;
+    };
+    _chart.apply = function(p, v) {
+        // apply a config when it exists
+        if(p && (typeof _chart[p] === 'function')) {
+            _chart[p](v)
+        }
+        return _chart
+    };
+
+    _chart.applyIf = function(p, v) {
+        // apply a config when it exists
+        if(p && (typeof _chart[p] === 'function') && v) {
+            _chart[p](v)
+        }
+        return _chart
     };
 
     return _chart;
@@ -1628,6 +1664,29 @@ dc.stackableChart = function (_chart) {
     var _allGroups;
     var _allValueAccessors;
     var _allKeyAccessors;
+    var _useYBaseline = false;
+    var _plotFirstGroup = true; 
+
+    _chart.useYBaseline = function(_) {
+        if (!arguments.length) return _useYBaseline;
+        _useYBaseline = _;
+        return _chart;
+    };
+
+    _chart.series = function(pivotGroup, fn) {
+        if(!pivotGroup) {
+            _plotFirstGroup = true;
+            return _chart;
+            }
+           
+        _plotFirstGroup = false;
+        pivotGroup.all().map(function(pivotGr, i) {
+            _chart.stack(_chart.group(), function(d) { 
+                return fn(d, i, pivotGr)
+            })
+        })
+        return _chart
+    }; 
 
     _chart.stack = function (group, retriever) {
         _groupStack.setDefaultAccessor(_chart.valueAccessor());
@@ -1649,7 +1708,8 @@ dc.stackableChart = function (_chart) {
         if (_allGroups == null) {
             _allGroups = [];
 
-            _allGroups.push(_chart.group());
+            //_allGroups.push(_chart.group());
+            if(_plotFirstGroup) _allGroups.push(_chart.group());
 
             for (var i = 0; i < _groupStack.size(); ++i)
                 _allGroups.push(_groupStack.getGroupByIndex(i));
@@ -1662,7 +1722,8 @@ dc.stackableChart = function (_chart) {
         if (_allValueAccessors == null) {
             _allValueAccessors = [];
 
-            _allValueAccessors.push(_chart.valueAccessor());
+            //_allValueAccessors.push(_chart.valueAccessor());
+            if(_plotFirstGroup) _allValueAccessors.push(_chart.valueAccessor());
 
             for (var i = 0; i < _groupStack.size(); ++i)
                 _allValueAccessors.push(_groupStack.getAccessorByIndex(i));
@@ -1704,11 +1765,14 @@ dc.stackableChart = function (_chart) {
 
         for (var groupIndex = 0; groupIndex < allGroups.length; ++groupIndex) {
             var group = allGroups[groupIndex];
-            max += dc.utils.groupMax(group, _chart.getValueAccessorByIndex(groupIndex));
+            //max += dc.utils.groupMax(group, _chart.getValueAccessorByIndex(groupIndex));
+            m = dc.utils.groupMax(group, _chart.getValueAccessorByIndex(groupIndex));
+            max = _useYBaseline ? d3.max([max, m]) : (max + m);
+        
         }
 
         max = dc.utils.add(max, _chart.yAxisPadding());
-
+        
         return max;
     };
 
@@ -1789,7 +1853,7 @@ dc.stackableChart = function (_chart) {
             var d = data[dataIndex];
             var value = getValueFromData(groupIndex, d);
             var pseudoZero = 1e-13;
-            if (groupIndex == 0) {
+            if (groupIndex == 0 || _useYBaseline)) {
                 if (value > pseudoZero)
                     _groupStack.setDataPoint(groupIndex, dataIndex, _chart.dataPointBaseline() - _chart.dataPointHeight(d, groupIndex));
                 else
@@ -2001,7 +2065,7 @@ dc.abstractBubbleChart = function (_chart) {
 
     return _chart;
 };
-dc.pieChart = function (parent, chartGroup) {
+dc.pieChart = function (parent, chartGroup, cfg) {
     var DEFAULT_MIN_ANGLE_FOR_LABEL = 0.5;
 
     var _sliceCssClass = "pie-slice";
@@ -2334,9 +2398,9 @@ dc.pieChart = function (parent, chartGroup) {
         return path;
     }
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
-dc.barChart = function (parent, chartGroup) {
+dc.barChart = function (parent, chartGroup, cfg) {
     var MIN_BAR_WIDTH = 1;
     var DEFAULT_GAP_BETWEEN_BARS = 2;
 
@@ -2536,9 +2600,9 @@ dc.barChart = function (parent, chartGroup) {
         return this._prepareOrdinalXAxis(_chart.xUnitCount() + 1);
     });
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
-dc.lineChart = function(parent, chartGroup) {
+dc.lineChart = function(parent, chartGroup, cfg) {
     var AREA_BOTTOM_PADDING = 1;
     var DEFAULT_DOT_RADIUS = 5;
     var TOOLTIP_G_CLASS = "dc-tooltip";
@@ -2739,9 +2803,9 @@ dc.lineChart = function(parent, chartGroup) {
         return _chart;
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
-dc.dataCount = function(parent, chartGroup) {
+dc.dataCount = function(parent, chartGroup, cfg) {
     var _formatNumber = d3.format(",d");
     var _chart = dc.baseChart({});
 
@@ -2756,7 +2820,7 @@ dc.dataCount = function(parent, chartGroup) {
         return _chart.doRender();
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
 dc.dataTable = function(parent, chartGroup) {
     var LABEL_CSS_CLASS = "dc-table-label";
@@ -2875,7 +2939,7 @@ dc.dataTable = function(parent, chartGroup) {
 
     return _chart.anchor(parent, chartGroup);
 };
-dc.bubbleChart = function(parent, chartGroup) {
+dc.bubbleChart = function(parent, chartGroup, cfg) {
     var _chart = dc.abstractBubbleChart(dc.coordinateGridChart({}));
 
     var _elasticRadius = false;
@@ -2978,7 +3042,7 @@ dc.bubbleChart = function(parent, chartGroup) {
         _chart.fadeDeselectedArea();
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
 dc.compositeChart = function(parent, chartGroup) {
     var SUB_CHART_CLASS = "sub";
@@ -3101,7 +3165,7 @@ dc.compositeChart = function(parent, chartGroup) {
 
     return _chart.anchor(parent, chartGroup);
 };
-dc.geoChoroplethChart = function (parent, chartGroup) {
+dc.geoChoroplethChart = function (parent, chartGroup, cfg) {
     var _chart = dc.colorChart(dc.baseChart({}));
 
     _chart.colorAccessor(function (d, i) {
@@ -3280,9 +3344,9 @@ dc.geoChoroplethChart = function (parent, chartGroup) {
         return _chart;
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
-dc.bubbleOverlay = function(root, chartGroup) {
+dc.bubbleOverlay = function(root, chartGroup, cfg) {
     var BUBBLE_OVERLAY_CLASS = "bubble-overlay";
     var BUBBLE_NODE_CLASS = "node";
     var BUBBLE_CLASS = "bubble";
@@ -3428,10 +3492,10 @@ dc.bubbleOverlay = function(root, chartGroup) {
         return _chart;
     };
 
-    _chart.anchor(root, chartGroup);
+    _chart.anchor(root, chartGroup, cfg);
 
     return _chart;
-};dc.rowChart = function (parent, chartGroup) {
+};dc.rowChart = function (parent, chartGroup, cfg) {
 
     var _g;
 
@@ -3644,5 +3708,5 @@ dc.bubbleOverlay = function(root, chartGroup) {
         return _chart.hasFilter(_chart.keyAccessor()(d));
     };
 
-    return _chart.anchor(parent, chartGroup);
+    return _chart.anchor(parent, chartGroup, cfg);
 };
