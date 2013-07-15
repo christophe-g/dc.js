@@ -1,4 +1,4 @@
-dc.cumulative = {};
+    dc.cumulative = {};
 
 dc.cumulative.Base = function() {
     this._keyIndex = [];

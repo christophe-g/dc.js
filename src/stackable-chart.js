@@ -5,6 +5,29 @@ dc.stackableChart = function (_chart) {
     var _allGroups;
     var _allValueAccessors;
     var _allKeyAccessors;
+    var _useYBaseline = false;
+    var _plotFirstGroup = true; 
+
+    _chart.useYBaseline = function(_) {
+        if (!arguments.length) return _useYBaseline;
+        _useYBaseline = _;
+        return _chart;
+    };
+
+    _chart.series = function(pivotGroup, fn) {
+        if(!pivotGroup) {
+            _plotFirstGroup = true;
+            return _chart;
+            }
+           
+        _plotFirstGroup = false;
+        pivotGroup.all().map(function(pivotGr, i) {
+            _chart.stack(_chart.group(), function(d) { 
+                return fn(d, i, pivotGr)
+            })
+        })
+        return _chart
+    }; 
 
     _chart.stack = function (group, retriever) {
         _groupStack.setDefaultAccessor(_chart.valueAccessor());
@@ -26,7 +49,8 @@ dc.stackableChart = function (_chart) {
         if (_allGroups == null) {
             _allGroups = [];
 
-            _allGroups.push(_chart.group());
+            //_allGroups.push(_chart.group());
+            if(_plotFirstGroup) _allGroups.push(_chart.group());
 
             for (var i = 0; i < _groupStack.size(); ++i)
                 _allGroups.push(_groupStack.getGroupByIndex(i));
@@ -39,7 +63,8 @@ dc.stackableChart = function (_chart) {
         if (_allValueAccessors == null) {
             _allValueAccessors = [];
 
-            _allValueAccessors.push(_chart.valueAccessor());
+            //_allValueAccessors.push(_chart.valueAccessor());
+            if(_plotFirstGroup) _allValueAccessors.push(_chart.valueAccessor());
 
             for (var i = 0; i < _groupStack.size(); ++i)
                 _allValueAccessors.push(_groupStack.getAccessorByIndex(i));
@@ -81,11 +106,14 @@ dc.stackableChart = function (_chart) {
 
         for (var groupIndex = 0; groupIndex < allGroups.length; ++groupIndex) {
             var group = allGroups[groupIndex];
-            max += dc.utils.groupMax(group, _chart.getValueAccessorByIndex(groupIndex));
+            //max += dc.utils.groupMax(group, _chart.getValueAccessorByIndex(groupIndex));
+            m = dc.utils.groupMax(group, _chart.getValueAccessorByIndex(groupIndex));
+            max = _useYBaseline ? d3.max([max, m]) : (max + m);
+        
         }
 
         max = dc.utils.add(max, _chart.yAxisPadding());
-
+        
         return max;
     };
 
@@ -166,7 +194,7 @@ dc.stackableChart = function (_chart) {
             var d = data[dataIndex];
             var value = getValueFromData(groupIndex, d);
             var pseudoZero = 1e-13;
-            if (groupIndex == 0) {
+            if (groupIndex == 0 || _useYBaseline)) {
                 if (value > pseudoZero)
                     _groupStack.setDataPoint(groupIndex, dataIndex, _chart.dataPointBaseline() - _chart.dataPointHeight(d, groupIndex));
                 else
