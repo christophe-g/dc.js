@@ -2,7 +2,7 @@
     <property environment="env"/>
     <property name="node.path" value="../node_modules"/>
     <property name="js.compiler" value="${node.path}/.bin/uglifyjs"/>
-    <property name="js.tester" value="${node.path}/.bin/vows"/>
+    <!--property name="js.tester" value="${node.path}/.bin/vows"/-->
     <property name="es.path" value="/mnt/DAV"/>
     <target name="init">
         <echo>Building...</echo>
@@ -14,13 +14,13 @@
         <delete file="package.json" />
     </target>
 
-    <target name="test" depends="make">
+    <!--target name="test" depends="make">
         <echo>Executing test suites</echo>
         <exec executable="${js.tester}" failonerror="yes">
             <env key="NODE_PATH" value="${node.path}"/>
             <arg value="--spec"/>
         </exec>
-    </target>
+    </target-->
 
     <target name="make" depends="clean, init">
         <echo>Compiling dc.js</echo>
@@ -49,9 +49,9 @@
             <file file="src/geo-choropleth-chart.js"/>
             <file file="src/bubble-overlay.js"/>
             <file file="src/row-chart.js"/>
-            <header> 
-                (function (window, document) {
-            </header>
+             <footer>
+                })(this, document);
+            </footer>
         </concat>
         <echo>Compiling dc.min.js</echo>
         <exec executable="bash">

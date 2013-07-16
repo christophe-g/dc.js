@@ -624,8 +624,9 @@ dc.baseChart = function (_chart) {
     
     _chart.applyConfig = function(cfg){
         for (var p in cfg) {
-        if (typeof chart[p] === 'function' && !!cfg[p] && cfg.hasOwnProperty(p) ) {
-            chart[p](cfg[p])
+            if (typeof chart[p] === 'function' && !!cfg[p] && cfg.hasOwnProperty(p) ) {
+                chart[p](cfg[p])
+            }
         }
     };
 
@@ -1853,7 +1854,7 @@ dc.stackableChart = function (_chart) {
             var d = data[dataIndex];
             var value = getValueFromData(groupIndex, d);
             var pseudoZero = 1e-13;
-            if (groupIndex == 0 || _useYBaseline)) {
+            if (groupIndex == 0 || _useYBaseline) {
                 if (value > pseudoZero)
                     _groupStack.setDataPoint(groupIndex, dataIndex, _chart.dataPointBaseline() - _chart.dataPointHeight(d, groupIndex));
                 else
@@ -3710,3 +3711,6 @@ dc.bubbleOverlay = function(root, chartGroup, cfg) {
 
     return _chart.anchor(parent, chartGroup, cfg);
 };
+
+                })(this, document);
+            
