@@ -495,7 +495,8 @@ dc.coordinateGridChart = function (_chart) {
     };
 
     function getClipPathId() {
-        return _chart.anchor().replace('#', '') + "-clip";
+        //return _chart.anchor().replace('#', '') + "-clip";
+        return _chart.root().attr('id') + '-clip';
     }
 
     _chart.clipPadding = function (p) {
