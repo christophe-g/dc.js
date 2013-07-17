@@ -35,6 +35,8 @@ dc.baseChart = function (_chart) {
 
     var _chartGroup = dc.constants.DEFAULT_CHART_GROUP;
 
+    var _lookupHandler = dc.utils.identity;
+
     var NULL_LISTENER = function (chart) {
     };
     var _listeners = {
@@ -176,7 +178,7 @@ dc.baseChart = function (_chart) {
     _chart.turnOnControls = function () {
         if (_root) {
             _chart.selectAll(".reset").style("display", null);
-            _chart.selectAll(".filter").text(_filterPrinter(_chart.filters())).style("display", null);
+            _chart.selectAll(".filter").text(_filterPrinter(_chart.filters(),_lookupHandler)).style("display", null);
         }
         return _chart;
     };
@@ -327,7 +329,12 @@ dc.baseChart = function (_chart) {
         _filterHandler = _;
         return _chart;
     };
-
+    _chart.lookupHandler = function (_) {
+        if (!arguments.length) return _lookupHandler;
+        _lookupHandler = _;
+        return _chart;
+    };
+    
     // abstract function stub
     _chart.doRender = function () {
         // do nothing in base, should be overridden by sub-function
