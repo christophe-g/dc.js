@@ -137,15 +137,24 @@ dc.baseChart = function (_chart) {
         return _chart;
     };
 
+    _chart.resize = function() {
+        if(_svg) {
+            _svg.attr("width", _chart.width())
+            _svg.attr("height", _chart.height());
+        }
+        return _chart;
+    };
+
     _chart.resetSvg = function () {
         _chart.select("svg").remove();
         return _chart.generateSvg();
     };
 
     _chart.generateSvg = function () {
-        _svg = _chart.root().append("svg")
-            .attr("width", _chart.width())
-            .attr("height", _chart.height());
+        _svg = _chart.root().append("svg");
+        _chart.resize();
+        //    .attr("width", _chart.width())
+        //    .attr("height", _chart.height());
         return _svg;
     };
 
@@ -209,6 +218,7 @@ dc.baseChart = function (_chart) {
     }
 
     _chart.redraw = function () {
+        _chart.resize();
         _listeners.preRedraw(_chart);
 
         var result = _chart.doRedraw();
