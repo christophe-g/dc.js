@@ -19,5 +19,5 @@ require("util").puts(JSON.stringify({
     "jquery": "1.8.x",
     "sinon": "1.5.x"
   },
-  "scripts": {"test": "./node_modules/vows/bin/vows"}
+  //"scripts": {"test": "../node_modules/vows/bin/vows"}
 }, null, 2));

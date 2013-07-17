@@ -199,9 +199,9 @@ dc.printers.filter = function (filter, lookupHandler) {
     if (filter) {
         if (filter instanceof Array) {
             if (filter.length >= 2)
-                s = "[" + dc.utils.printSingleValue(lookupHandler(filter[0]) + " -> " + dc.utils.printSingleValue(lookupHandler(filter[1]) + "]";
+                s = "[" + dc.utils.printSingleValue(lookupHandler(filter[0])) + " -> " + dc.utils.printSingleValue(lookupHandler(filter[1])) + "]";
             else if (filter.length >= 1)
-                s = dc.utils.printSingleValue(lookupHandler(filter[0]);
+                s = dc.utils.printSingleValue(lookupHandler(filter[0]));
         } else {
             s = dc.utils.printSingleValue(lookupHandler(filter))
         }
@@ -642,15 +642,24 @@ dc.baseChart = function (_chart) {
         return _chart;
     };
 
+    _chart.resize = function() {
+        if(_svg) {
+            _svg.attr("width", _chart.width())
+            _svg.attr("height", _chart.height());
+        }
+        return _chart;
+    };
+
     _chart.resetSvg = function () {
         _chart.select("svg").remove();
         return _chart.generateSvg();
     };
 
     _chart.generateSvg = function () {
-        _svg = _chart.root().append("svg")
-            .attr("width", _chart.width())
-            .attr("height", _chart.height());
+        _svg = _chart.root().append("svg");
+        _chart.resize();
+        //    .attr("width", _chart.width())
+        //    .attr("height", _chart.height());
         return _svg;
     };
 
@@ -714,6 +723,7 @@ dc.baseChart = function (_chart) {
     }
 
     _chart.redraw = function () {
+        _chart.resize();
         _listeners.preRedraw(_chart);
 
         var result = _chart.doRedraw();
@@ -909,7 +919,7 @@ dc.baseChart = function (_chart) {
         }
         return _chart
     };
-
+    
     return _chart;
 };
 dc.marginable = function (_chart) {
@@ -1427,7 +1437,8 @@ dc.marginable = function (_chart) {
     };
 
     function getClipPathId() {
-        return _chart.anchor().replace('#', '') + "-clip";
+        //return _chart.anchor().replace('#', '') + "-clip";
+        return _chart.root().attr('id') + '-clip';
     }
 
     _chart.clipPadding = function (p) {
@@ -2102,13 +2113,13 @@ dc.pieChart = function (parent, chartGroup, cfg) {
     }
 
     _chart.label(function (d) {
-        return _chart.keyAccessor()(d.data);
+        return _chart.lookupHandler()(_chart.keyAccessor()(d.data));
     });
 
     _chart.renderLabel(true);
 
     _chart.title(function (d) {
-        return _chart.keyAccessor()(d.data) + ": " + _chart.valueAccessor()(d.data);
+        return _chart.lookupHandler()(_chart.keyAccessor()(d.data)) + ": " + _chart.valueAccessor()(d.data);
     });
 
     _chart.transitionDuration(350);
@@ -3553,11 +3564,11 @@ dc.bubbleOverlay = function(root, chartGroup, cfg) {
     };
 
     _chart.title(function (d) {
-        return _chart.keyAccessor()(d) + ": " + _chart.valueAccessor()(d);
+        return _chart.lookupHandler()(_chart.keyAccessor()(d)) + ": " + _chart.valueAccessor()(d);
     });
 
     _chart.label(function (d) {
-        return _chart.keyAccessor()(d);
+        return _chart.lookupHandler()(_chart.keyAccessor()(d));
     });
 
     function drawGridLines() {
